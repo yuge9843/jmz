@@ -1,0 +1,14 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: none;
+}
+html body #root {
+    width: 100vmax;
+    height: 100vmin;
+}
+
+#root {
+    overflow: hidden;
+}
