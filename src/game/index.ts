@@ -2,15 +2,16 @@
  * @Description: 
  * @Author: yucheng
  * @Date: 2024-06-14
- * @LastEditors: error: git config user.name & please set dead value or install git
- * @LastEditTime: 2024-06-16
+ * @LastEditors: yuge9843
+ * @LastEditTime: 2024-06-20
  */
 import * as PIXI from 'pixijs';
 import { Assets } from './assets';
-import { Jmz } from './role';
 import { has } from 'lodash-es';
 import { Spirit } from './spirit';
-import { Sword } from './weapon';
+import { Jmz } from './entities/role/jmz';
+import { Sword } from './entities/weapon/sword';
+import { getAllCollisions } from './util';
 
 class Game {
     /**
@@ -21,6 +22,10 @@ class Game {
      * @description 容器map
      */    
     containersMap = new Map<string, PIXI.Container>();
+    /**
+     * @description 实体map
+     */    
+    entitiesMap = new Map<string, Record<string, any>>();
     constructor(container: HTMLCanvasElement) {
         const { width: screenWidth, height: screenHeight } = window.screen
         this.app = new PIXI.Application({
@@ -139,11 +144,26 @@ export const startGame = async (container: HTMLCanvasElement) => {
         x: 900,
         y: 600,
     })
-    for (let i = 0; i < 20; i++) {
-        const jian = new Sword({
+    for (let i = 0; i < 10; i++) {
+        const sword = new Sword({
             x: 500,
             y: 800
         })
-        jian.updateHolder(jmz)
-      }
+        sword.updateHolder(jmz)
+    }
+    const sword = new Sword({
+        x: 500,
+        y: 800
+    })
+    sword.width = 174
+    sword.height = 72
+    game.app.ticker.add(() => {
+        const objs = Array.from(game!.entitiesMap.values())
+        const collisions = getAllCollisions(objs as PIXI.DisplayObject[])
+        collisions.forEach(collision => {
+            const [ entityA, entityB ] = collision
+            entityA.hit(entityB)
+            entityB.hit(entityA)
+        })
+    })
 }

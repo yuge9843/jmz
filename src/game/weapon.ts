@@ -2,18 +2,24 @@
  * @Description: 
  * @Author: yucheng
  * @Date: 2024-06-14
- * @LastEditors: error: git config user.name & please set dead value or install git
- * @LastEditTime: 2024-06-16
+ * @LastEditors: yuge9843
+ * @LastEditTime: 2024-06-20
  */
 import * as PIXI from 'pixijs';
 import { ISpriteInfo, Spirit } from './spirit';
 import { game } from '.';
 import { Role } from './role';
+import { v4 as uuidv4 } from 'uuid';
+import { getHurt } from './util';
 
 /**
  * 武器基类
  */
 export class Weapon {
+  /**
+   * id
+   */
+  id = uuidv4()
   /**
    * 名称
    */
@@ -23,13 +29,21 @@ export class Weapon {
    */
   spirit: Spirit;
   /**
+   * 生命值
+   */
+  hp = 100;
+  /**
+   * 攻击力
+   */
+  attack = 10;
+  /**
+   * 防御
+   */
+  defense = 10;
+  /**
    * 持有者
    */  
   holder: Role | null = null;
-  /**
-   * 伤害值
-   */
-  harmValue: number = 1;
   /**
    * 对同一目标的伤害间隔
    */
@@ -42,6 +56,53 @@ export class Weapon {
    * 单人持有上限
    */
   maxHoldNum: number = 1;
+
+  get x() {
+    return this.spirit.x
+  }
+  set x(value) {
+    this.spirit.x = value
+  }
+  get y() {
+    return this.spirit.y
+  }
+  set y(value) {
+    this.spirit.y = value
+  }
+  get width() {
+    return this.spirit.width
+  }
+  set width(value) {
+    this.spirit.width = value
+  }
+  get height() {
+    return this.spirit.height
+  }
+  set height(value) {
+    this.spirit.height = value
+  }
+  get anchor() {
+    return this.spirit.anchor
+  }
+  set anchor(value) {
+    this.spirit.anchor = value
+  }
+  get scale() {
+    return this.spirit.scale
+  }
+  set scale(value) {
+    this.spirit.scale = value
+  }
+  get angle() {
+    return this.spirit.angle
+  }
+  set angle(value) {
+    this.spirit.angle = value
+  }
+  get getBounds() {
+    return this.spirit.getBounds.bind(this.spirit)
+  }
+  
   constructor(public spriteInfo: ISpriteInfo) {
     this.spirit = new Spirit(spriteInfo);
     this.name = spriteInfo.name;
@@ -49,6 +110,7 @@ export class Weapon {
       game?.containersMap.set('weapon', new PIXI.Container());
       game?.app.stage.addChild(game.containersMap.get('weapon')!);
     }
+    game?.entitiesMap.set(this.id, this);
     game?.containersMap.get('weapon')?.addChild(this.spirit);
   }
   /**
@@ -99,34 +161,28 @@ export class Weapon {
     const radians = angle * (Math.PI / 180);
     this.spirit.x = this.holder.spirit.x + distance * Math.cos(radians); 
     this.spirit.y = this.holder.spirit.y + distance * Math.sin(radians);
-
+  }
+  /**
+   * @description: 攻击
+   * @param {Role | Spirit} entity 攻击对象
+   */  
+  hit(entity: Role | Weapon) {
+    entity.hp -= getHurt(this.attack, entity.defense);
+    this.spirit.tint = 0xff0000
+    setTimeout(() => {
+      this.spirit.tint = 0xffffff
+    }, 50)
   }
   /**
    * @description: 销毁
    * @return {*}
    */  
   destory() {
+    game?.entitiesMap.delete(this.id);
     game?.containersMap.get('weapon')?.removeChild(this.spirit);
+    if(this.holder) {
+      this.holder.removeWeapon(this);
+    }
     this.spirit.destroy();
-  }
-}
-
-/**
- * 剑
- */
-export class Sword extends Weapon {
-  constructor(spriteInfo: {
-    x: number,
-    y: number,
-  }) {
-    super({
-      ...spriteInfo,
-      name: '剑',
-      width: 200,
-      height: 100
-    });
-    this.harmValue = 2;
-    this.maxHoldNum = 10
-    this.canRotate = true;
   }
 }
